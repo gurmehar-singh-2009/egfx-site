@@ -2,14 +2,18 @@ name: Build
 
 on:
   push:
+    branches: [main]
   pull_request:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Rust
@@ -25,3 +29,16 @@ jobs:
 
       - name: Build WASM
         run: wasm-pack build --target web --release
+
+      - name: Commit dist folder
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -f dist
+
+          git diff --staged --quiet || (
+            git commit -m "build: update dist [skip ci]"
+            git push
+          )
