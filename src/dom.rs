@@ -21,6 +21,8 @@ pub enum ElmType {
     Style,
     /// The `a` element.
     A,
+    /// The `canvas` element.
+    Canvas,
 }
 
 impl ElmType {
@@ -32,6 +34,7 @@ impl ElmType {
             Self::Link => "link",
             Self::Style => "style",
             Self::A => "a",
+            Self::Canvas => "canvas",
         }
     }
 }

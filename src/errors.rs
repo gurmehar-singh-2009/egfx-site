@@ -76,4 +76,32 @@ pub enum PageError {
         /// The JS error.
         source: JsError,
     },
+
+    #[snafu(display("Failed to acquire the Canvas2d context from a canvas: {source}"))]
+    Canvas2dContextAcquisition {
+        #[snafu(source(from(JsValue, JsError::from_js_value)))]
+        /// The JS error.
+        source: JsError,
+    },
+
+    #[snafu(display("Failed to cast generic element into canvas element: {source}"))]
+    GenericElementToCanvasConversionFailure {
+        #[snafu(source(from(JsValue, JsError::from_js_value)))]
+        /// The JS error.
+        source: JsError,
+    },
+
+    #[snafu(display("Failed to draw for some reason: {source}"))]
+    GenericDrawFailure {
+        #[snafu(source(from(JsValue, JsError::from_js_value)))]
+        /// The JS error.
+        source: JsError,
+    },
+
+    #[snafu(display("Failed to serialize page to xhtml: {source}"))]
+    XHTMLSerializationFailure {
+        #[snafu(source(from(JsValue, JsError::from_js_value)))]
+        /// The JS error.
+        source: JsError,
+    },
 }

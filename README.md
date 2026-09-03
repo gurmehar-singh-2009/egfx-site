@@ -46,8 +46,8 @@ This project was done for the [#tagless](https://tagless.hackclub.com) HackClub 
 
 ## Contribution Guidelines
 
-No contributions for the website will be taken!
+can you PLEASE resolve all the clippy warnings (cargo clippy) pleaseeeee.
 
 ## AI Usage
 
-No AI was used in the development of this site!
+No AI was used in the development of this site (regretting this already).
