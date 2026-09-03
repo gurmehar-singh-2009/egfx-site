@@ -1,0 +1,15 @@
+# SEE: https://github.com/trunk-rs/trunk/blob/main/Trunk.toml
+# for a full example Trunk.toml file.
+
+[build]
+target = "index.html"
+release = true # jaja optimizationsss
+dist = "dist"
+filehash = true # makes files look fancy imo, not really any other purpose for this project
+minify = "always"
+create_nonce = true
+
+[serve]
+addresses = ["0.0.0.0"]
+port = 3000
+open = true

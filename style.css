@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+:root {
+    --background: #1b1b1b;
+    --lighter-background: #222222;
+    --surface: #262626;
+    --border: #333333;
+    --text: #f0f0f0;
+    --text-muted: #9a9a9a;
+    --accent: #4f9cf9;
+    --accent-dim: #2b5ea8;
+
+    --top-bar-height: 64px;
+    --content-width: 1000px;
+    --code-font-size: 14px;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--background);
+    color: var(--text);
+    font-family: "Jetbrains Mono", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* navbar */
+#navbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    gap: 25%;
+
+    background-color: var(--lighter-background);
+    border-bottom: 1px solid var(--border);
+}
+
+#navbar-entries {
+    width: 100%;
+    height: var(--top-bar-height);
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-around;
+    padding-inline: 32px;
+}
+
+.navbar-entry {
+    font-size: 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.navbar-entry:hover {
+    color: var(--text);
+    background-color: var(--surface);
+}
+
+/* hero */
+#hero {
+    font-size: 40px;
+    line-height: 1.25;
+    max-width: var(--content-width);
+    margin-inline: auto;
+    padding: 96px 24px 16px;
+    text-align: center;
+}
+
+#expanded-hero {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    max-width: 720px;
+    margin-inline: auto;
+    padding: 0 24px 64px;
+    text-align: center;
+}
+
+/* actual content */
+.container {
+    max-width: var(--content-width);
+    margin-inline: auto;
+    padding: 0 24px 96px;
+}
+
+.header {
+    font-size: 22px;
+    margin: 48px 0 16px;
+}
+
+.row {
+    padding: 12px 16px;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+/* code block stuff */
+.code-block {
+    max-width: var(--content-width);
+    margin-inline: auto;
+}
+
+pre.syn-code {
+    background: #2b303b;
+    color: #c0c5ce;
+    padding: 20px 24px;
+    border: 1px solid var(--border); /* border actually looks nice for once */
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    white-space: pre;
+    /* experiment with/without box-shadow */
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: var(--code-font-size);
+    line-height: 1.6;
+    tab-size: 4;
+}
+
+/* footer */
+.footer {
+    padding: 12px;
+    margin-top: 32px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* extra btns */
+#extra-btns {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 400px;
+}
+
+.extra-btn {
+    font-size: 22px;
+    margin: 48px 0 16px;
+}
+
+.logo {
+    font-family: "JetBrains Mono";
+    font-size: 48px;
+    font-weight: bolder;
+    padding: 8px;
+    margin-left: 10px;
+}
