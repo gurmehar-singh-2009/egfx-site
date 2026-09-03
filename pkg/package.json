@@ -1,0 +1,35 @@
+{
+  "name": "easygfx-site",
+  "type": "module",
+  "collaborators": [
+    "Gurmehar Singh"
+  ],
+  "description": "Official website for the EasyGFX Library!",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gurmehar-singh-2009/easygfx-site"
+  },
+  "files": [
+    "easygfx_site_bg.wasm",
+    "easygfx_site.js",
+    "easygfx_site.d.ts"
+  ],
+  "main": "easygfx_site.js",
+  "types": "easygfx_site.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "keywords": [
+    "easygfx",
+    "egfx",
+    "docs",
+    "site",
+    "webgl",
+    "webgpu",
+    "2d-renderer",
+    "3d-renderer",
+    "renderer"
+  ]
+}
