@@ -81,9 +81,9 @@ fn start() -> Result<(), PageError> {
                 ),
 
                 DomElmBuilder::new(ElmType::Div).id("navbar-entries").children([
-                    DomElmBuilder::new(ElmType::Div).class("navbar-entry").text("Demos"),
-                    DomElmBuilder::new(ElmType::Div).class("navbar-entry").text("Documentation"),
-                    DomElmBuilder::new(ElmType::Div).class("navbar-entry").text("Installation"),
+                    DomElmBuilder::new(ElmType::Div).class("navbar-entry").text("Demos").href("https://gurmeharsingh2009.me/easygfx/"),
+                    DomElmBuilder::new(ElmType::Div).class("navbar-entry").text("Documentation").href("https://gurmeharsingh2009.me/easygfx/"),
+                    DomElmBuilder::new(ElmType::Div).class("navbar-entry").text("Installation").href("https://gurmeharsingh2009.me/easygfx/"),
                 ]),
             ]),
 
