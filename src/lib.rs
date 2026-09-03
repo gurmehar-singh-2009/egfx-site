@@ -9,8 +9,9 @@ use std::{
 use js_sys::Uint8Array;
 use snafu::{OptionExt, ResultExt};
 use syntect::{
-    highlighting::ThemeSet,
-    html::{ClassStyle, ClassedHTMLGenerator, css_for_theme_with_class_style},
+    easy::HighlightLines,
+    highlighting::{FontStyle, ThemeSet},
+    html::{ClassStyle, css_for_theme_with_class_style},
     parsing::SyntaxSet,
     util::LinesWithEndings,
 };
@@ -760,9 +761,7 @@ fn build_page_tree() -> Result<DomElement, PageError> {
                 .text("EasyGFX abstracts away the differences between Canvas2D, WebGL and WebGPU, giving you a simple, consistent API for building 2D and 3D experiences on the web. Choose the backend that fits your needs while keeping your rendering code, workflow, and mental model the same."),
 
             // code block example
-            DomElmBuilder::new(ElmType::Div)
-                .class("code-block")
-                .html(highlight(EASYGFX_TS, "js").as_str()), // it doesn't support TS :(
+            highlight(EASYGFX_TS, "js"),
 
             DomElmBuilder::new(ElmType::Div).class("footer").text("© Copyright 2026 EasyGFX"),
         ])
@@ -809,26 +808,59 @@ fn get_body() -> Result<HtmlElement, PageError> {
     DOC.with(Document::body).context(GetBodySnafu)
 }
 
-/// Syntax Highlights a select block of code with specified language token.
-fn highlight(code: &str, lang_token: &str) -> String {
+fn highlight<'a>(code: &'a str, lang_token: &str) -> DomElmBuilder<'a> {
     let ss = syntax_set();
+
     let syntax = ss
         .find_syntax_by_token(lang_token)
         .unwrap_or_else(|| ss.find_syntax_plain_text());
-    let mut generator = ClassedHTMLGenerator::new_with_class_style(
-        syntax,
-        ss,
-        ClassStyle::SpacedPrefixed { prefix: "syn-" },
-    );
+
+    let theme_set = ThemeSet::load_defaults();
+    let theme = &theme_set.themes["base16-ocean.dark"];
+
+    let mut highlighter = HighlightLines::new(syntax, theme);
+
+    let mut code_builder = DomElmBuilder::new(ElmType::Code);
 
     for line in LinesWithEndings::from(code) {
-        generator
-            .parse_html_for_line_which_includes_newline(line)
-            .expect("Failed to generate HTML stuff.");
+        let regions = highlighter
+            .highlight_line(line, ss)
+            .expect("Failed to highlight code.");
+
+        for (style, text) in regions {
+            let mut css = format!(
+                "color:#{:02x}{:02x}{:02x};",
+                style.foreground.r, style.foreground.g, style.foreground.b,
+            );
+
+            // if style.background.a != 0 {
+            //     css.push_str(&format!(
+            //         "background-color:#{:02x}{:02x}{:02x};",
+            //         style.background.r, style.background.g, style.background.b,
+            //     ));
+            // }
+
+            if style.font_style.contains(FontStyle::BOLD) {
+                css.push_str("font-weight:bold;");
+            }
+
+            if style.font_style.contains(FontStyle::ITALIC) {
+                css.push_str("font-style:italic;");
+            }
+
+            if style.font_style.contains(FontStyle::UNDERLINE) {
+                css.push_str("text-decoration:underline;");
+            }
+
+            let span = DomElmBuilder::new(ElmType::Span).style(css).text(text);
+
+            code_builder = code_builder.child(span);
+        }
     }
 
-    format!(
-        "<pre class=\"syn-code\"><code>{}</code></pre>",
-        generator.finalize()
+    DomElmBuilder::new(ElmType::Div).class("code-block").child(
+        DomElmBuilder::new(ElmType::Pre)
+            .class("syn-code")
+            .child(code_builder),
     )
 }

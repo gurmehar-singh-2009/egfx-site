@@ -23,6 +23,12 @@ pub enum ElmType {
     A,
     /// The `canvas` element.
     Canvas,
+    /// The `pre` element.
+    Pre,
+    /// The `code` element.
+    Code,
+    /// The `span` element.
+    Span,
 }
 
 impl ElmType {
@@ -35,6 +41,9 @@ impl ElmType {
             Self::Style => "style",
             Self::A => "a",
             Self::Canvas => "canvas",
+            Self::Code => "code",
+            Self::Pre => "pre",
+            Self::Span => "span",
         }
     }
 }
@@ -94,6 +103,8 @@ pub struct DomElmBuilder<'a> {
     nonce: Option<&'a str>,
     /// The `innerHTML` value for an element.
     inner_html: Option<&'a str>,
+    /// The `style` value for an element.
+    style: Option<String>,
     /// The children of this element.
     #[allow(clippy::use_self)] // `Self` cannot work here as it is bounded by `'a`.
     children: Vec<DomElmBuilder<'a>>,
@@ -158,6 +169,12 @@ impl<'a> DomElmBuilder<'a> {
         self
     }
 
+    /// Sets the element's inline style.
+    pub fn style(mut self, style: impl Into<String>) -> Self {
+        self.style = Some(style.into());
+        self
+    }
+
     /// Adds the child to the children list of this element.
     #[allow(clippy::missing_const_for_fn)] // This fn cannot be `const`.
     #[allow(clippy::use_self)] // `Self` cannot be used here inplace of `DomElmBuilder` because it is bounded by `'a`.
@@ -186,6 +203,7 @@ impl<'a> DomElmBuilder<'a> {
             rel,
             nonce,
             inner_html,
+            style,
             children,
         } = self;
 
@@ -223,6 +241,10 @@ impl<'a> DomElmBuilder<'a> {
 
         if let Some(html) = inner_html {
             element.set_inner_html(html);
+        }
+
+        if let Some(style) = style {
+            element.set_attribute("style", &style).unwrap();
         }
 
         let parent = DomElement {
