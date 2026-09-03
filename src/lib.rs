@@ -1,3 +1,5 @@
+#![allow(clippy::multiple_crate_versions)] // The `syn` crate messes this up...
+
 use snafu::OptionExt;
 use syntect::{
     highlighting::ThemeSet,
@@ -21,7 +23,7 @@ thread_local! {
     static BODY: HtmlElement = get_body().expect("Failed to get body!");
 }
 
-// the sample code
+/// The sample TypeScript code to showcase.
 const EASYGFX_TS: &str = r#"import {
   Backends,
   Engine,
@@ -63,6 +65,7 @@ fn main() -> Result<(), JsValue> {
     start().map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
+/// Renders the page.
 fn start() -> Result<(), PageError> {
     inject_css();
     inject_syntax_theme_css();
@@ -72,7 +75,7 @@ fn start() -> Result<(), PageError> {
         .children([
             // nav bar
             DomElmBuilder::new(ElmType::Div).id("navbar").children([
-                // TODO: image holder
+                // TODO: image placeholder
                 DomElmBuilder::new(ElmType::Div).child(
                     DomElmBuilder::new(ElmType::Div).class("logo").text(">_EasyGFX")
                 ),
@@ -104,13 +107,14 @@ fn start() -> Result<(), PageError> {
                 .class("code-block")
                 .html(highlight(EASYGFX_TS, "js").as_str()), // it doesn't support TS :(
 
-            DomElmBuilder::new(ElmType::Div).class("footer").text("© Copyright 2026"),
+            DomElmBuilder::new(ElmType::Div).class("footer").text("© Copyright 2026 EasyGFX"),
         ])
         .append_to_body()?;
 
     Ok(())
 }
 
+/// Returns a `Result` for a `web_sys::Document` handle.
 fn get_document() -> Result<Document, PageError> {
     web_sys::window()
         .context(GetWindowSnafu)?
@@ -118,10 +122,14 @@ fn get_document() -> Result<Document, PageError> {
         .context(GetDocumentSnafu)
 }
 
+/// Returns a `Result` for a `web_sys::HtmlElement` handle that corresponds to
+/// the <body> element.
 fn get_body() -> Result<HtmlElement, PageError> {
-    DOC.with(|doc| doc.body()).context(GetBodySnafu)
+    DOC.with(Document::body).context(GetBodySnafu)
 }
 
+/// Injects the stylesheet into the DOM.
+/// Technically should append to <head> but whatever.
 fn inject_css() {
     _ = DomElmBuilder::new(ElmType::Link)
         .rel("stylesheet")
@@ -129,6 +137,7 @@ fn inject_css() {
         .append_to_body();
 }
 
+/// Injects the code-block css theme.
 fn inject_syntax_theme_css() {
     let ts = ThemeSet::load_defaults();
     for name in ts.themes.keys() {
@@ -160,6 +169,7 @@ pre.syn-code {
         .append_to_body();
 }
 
+/// Syntax Highlights a select block of code with specified language token.
 fn highlight(code: &str, lang_token: &str) -> String {
     let ss = SyntaxSet::load_defaults_newlines();
     let syntax = ss
@@ -174,7 +184,7 @@ fn highlight(code: &str, lang_token: &str) -> String {
     for line in LinesWithEndings::from(code) {
         generator
             .parse_html_for_line_which_includes_newline(line)
-            .unwrap();
+            .expect("Failed to generate HTML stuff.");
     }
 
     format!(

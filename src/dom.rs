@@ -1,3 +1,6 @@
+//! Boilerplate code for working with the DOM.
+//! The system CAN be improved but probably is not worth it.
+
 use snafu::ResultExt;
 use web_sys::{Element, Node};
 
@@ -7,20 +10,24 @@ use crate::{
 };
 
 #[derive(Debug, Default, Clone, Copy)]
+/// The DOM element.
 pub enum ElmType {
     #[default]
+    /// The `div` element.
     Div,
+    /// The `link` element.
     Link,
-    A,
+    /// The `style` element.
     Style,
 }
 
 impl ElmType {
-    pub fn as_str(&self) -> &'static str {
+    /// Returns the type as a &str with 'static.
+    #[allow(clippy::trivially_copy_pass_by_ref)] // not the intention.
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Div => "div",
             Self::Link => "link",
-            Self::A => "a",
             Self::Style => "style",
         }
     }
@@ -32,13 +39,17 @@ impl std::fmt::Display for ElmType {
     }
 }
 
+/// Represents a DOM element in our system.
 pub struct DomElement {
+    /// The `web_sys::Element`.
     pub element: Element,
+    /// The element type.
     pub element_type: ElmType,
 }
 
 impl DomElement {
-    pub fn append_child(&self, child: &DomElement) -> Result<Node, PageError> {
+    /// Appends the provided element to the list of children of this element.
+    pub fn append_child(&self, child: &Self) -> Result<Node, PageError> {
         self.element
             .append_child(&child.element)
             .context(AppendChildSnafu {
@@ -46,6 +57,7 @@ impl DomElement {
             })
     }
 
+    /// Appends this element directly to the <body> element.
     pub fn append_to_body(&self) -> Result<Node, PageError> {
         BODY.with(|body| {
             body.append_child(&self.element).context(AppendChildSnafu {
@@ -56,20 +68,33 @@ impl DomElement {
 }
 
 #[derive(Debug, Default)]
+/// Describes the properties we can set during the building phase.
 pub struct DomElmBuilder<'a> {
+    /// The element's type.
     element_type: ElmType,
+    /// The element's id.
     id: Option<&'a str>,
+    /// The element's class.
     class: Option<&'a str>,
+    /// The `innerText` attribute for an element.
     text: Option<&'a str>,
+    /// The `src` attribute for an element.
     src: Option<&'a str>,
+    /// The `href` attribute for an element.
     href: Option<&'a str>,
+    /// The `rel` attribute for an element.
     rel: Option<&'a str>,
+    /// The `nonce` attribute for an element.
     nonce: Option<&'a str>,
+    /// The `innerHTML` value for an element.
     inner_html: Option<&'a str>,
+    /// The children of this element.
+    #[allow(clippy::use_self)] // `Self` cannot work here as it is bounded by `'a`.
     children: Vec<DomElmBuilder<'a>>,
 }
 
 impl<'a> DomElmBuilder<'a> {
+    /// Begin building a new DOM element. Accepts the element type.
     pub fn new(element_type: ElmType) -> Self {
         Self {
             element_type,
@@ -77,56 +102,73 @@ impl<'a> DomElmBuilder<'a> {
         }
     }
 
-    pub fn id(mut self, id: &'a str) -> Self {
+    /// Sets the element's `id` attribute.
+    pub const fn id(mut self, id: &'a str) -> Self {
         self.id = Some(id);
         self
     }
 
-    pub fn class(mut self, class: &'a str) -> Self {
+    /// Sets the element's `class` attribute.
+    pub const fn class(mut self, class: &'a str) -> Self {
         self.class = Some(class);
         self
     }
 
-    pub fn text(mut self, text: &'a str) -> Self {
+    /// Sets the element's text value.
+    pub const fn text(mut self, text: &'a str) -> Self {
         self.text = Some(text);
         self
     }
 
-    pub fn src(mut self, src: &'a str) -> Self {
+    /// Sets the element's `src` attribute.
+    #[allow(unused)] // may be useful in the future
+    pub const fn src(mut self, src: &'a str) -> Self {
         self.src = Some(src);
         self
     }
 
-    pub fn href(mut self, href: &'a str) -> Self {
+    /// Sets the element's `href` attribute.
+    pub const fn href(mut self, href: &'a str) -> Self {
         self.href = Some(href);
         self
     }
 
-    pub fn rel(mut self, rel: &'a str) -> Self {
+    /// Sets the element's `rel` attribute.
+    pub const fn rel(mut self, rel: &'a str) -> Self {
         self.rel = Some(rel);
         self
     }
 
-    pub fn nonce(mut self, nonce: &'a str) -> Self {
+    #[allow(unused)] // may be useful in the future
+    /// Sets the element's `nonce` attribute.
+    pub const fn nonce(mut self, nonce: &'a str) -> Self {
         self.nonce = Some(nonce);
         self
     }
 
-    pub fn html(mut self, html: &'a str) -> Self {
+    /// Sets the element's `innerHTML` value.
+    pub const fn html(mut self, html: &'a str) -> Self {
         self.inner_html = Some(html);
         self
     }
 
+    /// Adds the child to the children list of this element.
+    #[allow(clippy::missing_const_for_fn)] // This fn cannot be `const`.
+    #[allow(clippy::use_self)] // `Self` cannot be used here inplace of `DomElmBuilder` because it is bounded by `'a`.
     pub fn child(mut self, child: DomElmBuilder<'a>) -> Self {
         self.children.push(child);
         self
     }
 
+    /// Adds the children to the children list of this element.
+    #[allow(clippy::missing_const_for_fn)] // This fn cannot be `const`.
+    #[allow(clippy::use_self)] // `Self` cannot be used here inplace of `DomElmBuilder` because it is bounded by `'a`.
     pub fn children(mut self, children: impl IntoIterator<Item = DomElmBuilder<'a>>) -> Self {
         self.children.extend(children);
         self
     }
 
+    /// Finalizes the build process and creates the DOM element, returning it.
     pub fn build(self) -> Result<DomElement, PageError> {
         let Self {
             element_type,
@@ -169,7 +211,7 @@ impl<'a> DomElmBuilder<'a> {
             element.set_attribute("rel", rel).unwrap();
         }
 
-        if let Some(nonce) = &self.nonce {
+        if let Some(nonce) = nonce {
             element.set_attribute("nonce", nonce).unwrap();
         }
 
@@ -190,6 +232,7 @@ impl<'a> DomElmBuilder<'a> {
         Ok(parent)
     }
 
+    /// Appends this element directly to the <body> element.
     pub fn append_to_body(self) -> Result<DomElement, PageError> {
         let dom_element = self.build()?;
         dom_element.append_to_body()?;

@@ -6,6 +6,8 @@ description = "Official website for the EasyGFX Library!"
 repository = "https://github.com/gurmehar-singh-2009/easygfx-site"
 authors = ["Gurmehar Singh"]
 license = "MIT"
+keywords = ["easygfx", "egfx", "docs", "site", "webgl", "webgpu", "2d-renderer", "3d-renderer", "renderer"]
+categories = ["web-graphics", "wasm", "webgl", "webgpu", "renderer", "3d-renderer"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
