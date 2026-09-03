@@ -246,8 +246,8 @@ impl Page {
             .max(1.0);
         self.scale.set(scale);
 
-        let body_html = serialize_xhtml(&root);
-        let svg = wrap_in_svg(&body_html, &css, vw, content_h, vw, vh);
+        let svg_root = wrap_in_svg(root, &css, vw, content_h, vw, vh)?;
+        let svg = serialize_xhtml(&svg_root);
 
         let (img, url) = load_svg_image(&svg).await;
 
@@ -549,7 +549,7 @@ fn measure_page(root: &DomElement, css: &str) -> Result<(Vec<Link>, f64), PageEr
     let anchors = root
         .element
         .query_selector_all("a")
-        .expect("query <a> elements");
+        .expect("query `a` elements");
 
     for i in 0..anchors.length() {
         let anchor: HtmlElement = anchors
@@ -585,32 +585,61 @@ fn serialize_xhtml(root: &DomElement) -> String {
     XmlSerializer::new()
         .unwrap()
         .serialize_to_string(&root.element)
-        // .context(XHTMLSerializationFailureSnafu)
-        .expect("serialize page to XHTML")
+        .expect("serialize page")
 }
 
 fn wrap_in_svg(
-    body_html: &str,
+    root: DomElement,
     css: &str,
     w: f64,
     h: f64,
     viewport_w: f64,
     viewport_h: f64,
-) -> String {
+) -> Result<DomElement, PageError> {
     let css = rewrite_viewport_units(css, viewport_w, viewport_h);
 
-    let css = css.replace('&', "&amp;").replace('<', "&lt;");
+    let style = DomElmBuilder::new(ElmType::Style)
+        .namespace(dom::DomNamespace::Html)
+        .html(&css)
+        .build()?;
 
-    format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}">
-  <foreignObject width="{w}" height="{h}">
-    <html xmlns="http://www.w3.org/1999/xhtml">
-      <head><style>{css}</style></head>
-      <body style="margin:0;width:{w}px;">{body_html}</body>
-    </html>
-  </foreignObject>
-</svg>"#
-    )
+    let head = DomElmBuilder::new(ElmType::Head)
+        .namespace(dom::DomNamespace::Html)
+        .build()?;
+
+    head.append_child(&style)?;
+
+    let body = DomElmBuilder::new(ElmType::Body)
+        .namespace(dom::DomNamespace::Html)
+        .build()?;
+
+    body.append_child(&root)?;
+
+    let html = DomElmBuilder::new(ElmType::Html)
+        .namespace(dom::DomNamespace::Html)
+        .build()?;
+
+    html.append_child(&head)?;
+    html.append_child(&body)?;
+
+    let foreign_object = DomElmBuilder::new(ElmType::ForeignObject)
+        .namespace(dom::DomNamespace::Svg)
+        .attribute("width", &w.to_string())
+        .attribute("height", &h.to_string())
+        .build()?;
+
+    foreign_object.append_child(&html)?;
+
+    let svg = DomElmBuilder::new(ElmType::Svg)
+        .namespace(dom::DomNamespace::Svg)
+        .attribute("xmlns", "http://www.w3.org/2000/svg")
+        .attribute("width", &w.to_string())
+        .attribute("height", &h.to_string())
+        .build()?;
+
+    svg.append_child(&foreign_object)?;
+
+    Ok(svg)
 }
 
 fn rewrite_viewport_units(css: &str, vw: f64, vh: f64) -> String {

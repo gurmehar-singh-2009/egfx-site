@@ -29,11 +29,15 @@ pub enum ElmType {
     Code,
     /// The `span` element.
     Span,
+    Svg,
+    ForeignObject,
+    Html,
+    Head,
+    Body,
 }
 
 impl ElmType {
-    /// Returns the type as a &str with 'static.
-    #[allow(clippy::trivially_copy_pass_by_ref)] // not the intention.
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Div => "div",
@@ -41,11 +45,22 @@ impl ElmType {
             Self::Style => "style",
             Self::A => "a",
             Self::Canvas => "canvas",
-            Self::Code => "code",
             Self::Pre => "pre",
+            Self::Code => "code",
             Self::Span => "span",
+            Self::Svg => "svg",
+            Self::ForeignObject => "foreignObject",
+            Self::Html => "html",
+            Self::Head => "head",
+            Self::Body => "body",
         }
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum DomNamespace {
+    Html,
+    Svg,
 }
 
 impl std::fmt::Display for ElmType {
@@ -87,6 +102,8 @@ impl DomElement {
 pub struct DomElmBuilder<'a> {
     /// The element's type.
     element_type: ElmType,
+    /// The namespace.
+    namespace: Option<DomNamespace>,
     /// The element's id.
     id: Option<&'a str>,
     /// The element's class.
@@ -105,6 +122,7 @@ pub struct DomElmBuilder<'a> {
     inner_html: Option<&'a str>,
     /// The `style` value for an element.
     style: Option<String>,
+    attributes: Vec<(&'a str, &'a str)>,
     /// The children of this element.
     #[allow(clippy::use_self)] // `Self` cannot work here as it is bounded by `'a`.
     children: Vec<DomElmBuilder<'a>>,
@@ -175,6 +193,18 @@ impl<'a> DomElmBuilder<'a> {
         self
     }
 
+    /// Sets the element's namespace for us.
+    pub const fn namespace(mut self, namespace: DomNamespace) -> Self {
+        self.namespace = Some(namespace);
+        self
+    }
+
+    // lwk shouldve just done this
+    pub fn attribute(mut self, name: &'a str, value: &'a str) -> Self {
+        self.attributes.push((name, value));
+        self
+    }
+
     /// Adds the child to the children list of this element.
     #[allow(clippy::missing_const_for_fn)] // This fn cannot be `const`.
     #[allow(clippy::use_self)] // `Self` cannot be used here inplace of `DomElmBuilder` because it is bounded by `'a`.
@@ -204,13 +234,26 @@ impl<'a> DomElmBuilder<'a> {
             nonce,
             inner_html,
             style,
+            namespace,
+            attributes,
             children,
         } = self;
 
-        let element = DOC.with(|doc| {
-            doc.create_element(element_type.as_str())
-                .context(ElementCreationSnafu { element_type })
+        let element = DOC.with(|doc| match namespace {
+            Some(DomNamespace::Svg) => doc
+                .create_element_ns(Some("http://www.w3.org/2000/svg"), element_type.as_str())
+                .context(ElementCreationSnafu { element_type }),
+
+            Some(DomNamespace::Html) | None => doc
+                .create_element(element_type.as_str())
+                .context(ElementCreationSnafu { element_type }),
         })?;
+
+        for (name, value) in attributes {
+            element
+                .set_attribute(name, value)
+                .expect("failed to set attribute");
+        }
 
         if let Some(id) = id {
             element.set_id(id);
